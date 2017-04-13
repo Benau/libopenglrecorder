@@ -1,0 +1,13 @@
+EXPORTS
+ogrInitConfig
+ogrSetSavedName
+ogrPrepareCapture
+ogrCapture
+ogrStopCapture
+ogrDestroy
+ogrRegGeneralCallback
+ogrRegStringCallback
+ogrRegIntCallback
+ogrCapturing
+ogrRegReadPixelsFunction
+ogrRegPBOFunctions
