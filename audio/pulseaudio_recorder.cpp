@@ -21,6 +21,11 @@
 namespace Recorder
 {
     // ========================================================================
+    void serverInfoCallBack(pa_context* c, const pa_server_info* i, void* data)
+    {
+        *(std::string*)data = i->default_sink_name;
+    }   // serverInfoCallBack
+    // ========================================================================
     class PulseAudioData : public CommonAudioData
     {
     public:
@@ -347,9 +352,7 @@ namespace Recorder
                 }
             }
             pa_operation* pa_op = pa_context_get_server_info(m_context,
-                [] (pa_context* c, const pa_server_info* i, void* data)
-                { *(std::string*)data = i->default_sink_name; },
-                &m_default_sink);
+                serverInfoCallBack, &m_default_sink);
             enum pa_operation_state op_state;
             while ((op_state =
                 pa_operation_get_state(pa_op)) == PA_OPERATION_RUNNING)
