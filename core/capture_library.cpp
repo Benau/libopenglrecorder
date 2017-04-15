@@ -235,8 +235,6 @@ void CaptureLibrary::captureConversion(CaptureLibrary* cl)
             int val_for_cb = 0;
             if (!cl->m_destroy)
             {
-                if (cl->m_jpg_list.size() > 100)
-                    runCallback(OGR_CBT_WAIT_RECORDING, NULL);
                 runCallback(OGR_CBT_PROGRESS_RECORDING, &val_for_cb);
             }
             cl->m_jpg_list.emplace_back((uint8_t*)NULL, 0, 0);

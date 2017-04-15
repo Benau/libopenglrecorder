@@ -104,11 +104,6 @@ typedef enum
      */
     OGR_CBT_PROGRESS_RECORDING,
     /**
-     * A \ref GeneralCallback which notify user if there is still video
-     * encoding happening after the issue of \ref ogrStopCapture.
-     */
-    OGR_CBT_WAIT_RECORDING,
-    /**
      * Total callback numbers.
      */
     OGR_CBT_COUNT

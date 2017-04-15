@@ -32,8 +32,6 @@ StringCallback g_cb_saved_rec = NULL;
 // ============================================================================
 IntCallback g_cb_progress_rec = NULL;
 // ============================================================================
-GeneralCallback g_cb_wait_rec = NULL;
-// ============================================================================
 GeneralCallback g_cb_start_rec = NULL;
 // ============================================================================
 StringCallback g_cb_error_rec = NULL;
@@ -157,10 +155,6 @@ void ogrRegGeneralCallback(CallBackType cbt, GeneralCallback cb, void* data)
         g_cb_start_rec = cb;
         g_all_user_data[OGR_CBT_START_RECORDING] = data;
         break;
-    case OGR_CBT_WAIT_RECORDING:
-        g_cb_wait_rec = cb;
-        g_all_user_data[OGR_CBT_WAIT_RECORDING] = data;
-        break;
     default:
         assert(false && "Wrong callback enum");
         break;
@@ -231,12 +225,6 @@ void runCallback(CallBackType cbt, const void* arg)
         if (g_cb_progress_rec == NULL) return;
         const int* i = (const int*)arg;
         g_cb_progress_rec(*i, g_all_user_data[OGR_CBT_PROGRESS_RECORDING]);
-        break;
-    }
-    case OGR_CBT_WAIT_RECORDING:
-    {
-        if (g_cb_wait_rec == NULL) return;
-        g_cb_wait_rec(g_all_user_data[OGR_CBT_WAIT_RECORDING]);
         break;
     }
     default:
