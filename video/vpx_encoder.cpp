@@ -37,8 +37,9 @@ namespace Recorder
             {
                 fwrite(&pkt->data.frame.sz, 1, sizeof(uint32_t), out);
                 fwrite(&pkt->data.frame.pts, 1, sizeof(int64_t), out);
-                fwrite(&pkt->data.frame.flags, 1,
-                    sizeof(vpx_codec_frame_flags_t), out);
+                bool key_frame =
+                    (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+                fwrite(&key_frame, 1, sizeof(bool), out);
                 fwrite(pkt->data.frame.buf, 1, pkt->data.frame.sz, out);
             }
         }
@@ -99,6 +100,8 @@ namespace Recorder
         float last_size = -1.0f;
         int cur_finished_count = 0;
         uint8_t* yuv = new uint8_t[width * height * 3 / 2];
+        const uint32_t private_header_size = 0;
+        fwrite(&private_header_size, 1, sizeof(uint32_t), vpx_data);
         while (true)
         {
             std::unique_lock<std::mutex> ul(*cl->getJPGListMutex());
@@ -114,7 +117,7 @@ namespace Recorder
                 ul.unlock();
                 if (cl->displayingProgress())
                 {
-                    int rate = 100;
+                    int rate = 99;
                     runCallback(OGR_CBT_PROGRESS_RECORDING, &rate);
                 }
                 break;
@@ -127,7 +130,7 @@ namespace Recorder
                     last_size = (float)(cl->getJPGList()->size());
                 cur_finished_count += frame_count;
                 int rate = (int)(cur_finished_count / last_size * 100.0f);
-                rate = rate > 100 ? 100 : rate;
+                rate = rate > 99 ? 99 : rate;
                 runCallback(OGR_CBT_PROGRESS_RECORDING, &rate);
             }
             int ret = cl->yuvConversion(jpg, jpg_size, yuv);

@@ -60,7 +60,10 @@ class CaptureLibrary
 private:
     RecorderConfig* m_recorder_cfg;
 
-    std::atomic_bool m_destroy, m_display_progress, m_sound_stop;
+    std::atomic_bool m_display_progress, m_sound_stop;
+
+    bool m_destroy;
+    std::mutex m_destroy_mutex;
 
     bool m_capturing;
     mutable std::mutex m_capturing_mutex;
@@ -116,8 +119,6 @@ public:
     bool displayingProgress() const       { return m_display_progress.load(); }
     // ------------------------------------------------------------------------
     bool getSoundStop() const                   { return m_sound_stop.load(); }
-    // ------------------------------------------------------------------------
-    bool getDestroy() const                        { return m_destroy.load(); }
     // ------------------------------------------------------------------------
     bool isCapturing() const
     {

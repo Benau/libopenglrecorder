@@ -24,10 +24,10 @@ const uint32_t E_GL_UNSIGNED_BYTE = 0x1401;
 CaptureLibrary::CaptureLibrary(RecorderConfig* rc)
 {
     m_recorder_cfg = rc;
-    m_destroy.store(false);
+    m_destroy = false;
+    m_capturing = false;
     m_sound_stop.store(true);
     m_display_progress.store(false);
-    m_capturing = false;
     m_compress_handle = tjInitCompress();
     m_decompress_handle = tjInitDecompress();
     m_audio_data = NULL;
@@ -51,11 +51,14 @@ CaptureLibrary::CaptureLibrary(RecorderConfig* rc)
 // ----------------------------------------------------------------------------
 CaptureLibrary::~CaptureLibrary()
 {
-    m_destroy.store(true);
-    std::unique_lock<std::mutex> ul(m_fbi_mutex);
+    m_display_progress.store(false);
+    std::unique_lock<std::mutex> uld(m_destroy_mutex);
+    m_destroy = true;
+    uld.unlock();
+    std::unique_lock<std::mutex> ulf(m_fbi_mutex);
     m_frame_type = isCapturing() ? -1 : -2;
     m_fbi_ready.notify_one();
-    ul.unlock();
+    ulf.unlock();
     m_capture_thread.join();
     tjDestroy(m_compress_handle);
     tjDestroy(m_decompress_handle);
@@ -228,22 +231,28 @@ void CaptureLibrary::captureConversion(CaptureLibrary* cl)
                 cl->m_audio_enc_thread.join();
             }
             std::unique_lock<std::mutex> ulj(cl->m_jpg_list_mutex);
-            if (!cl->m_destroy.load() && cl->m_jpg_list.size() > 100)
+            std::lock_guard<std::mutex> ld(cl->m_destroy_mutex);
+            int val_for_cb = 0;
+            if (!cl->m_destroy)
             {
-                runCallback(OGR_CBT_WAIT_RECORDING, NULL);
+                if (cl->m_jpg_list.size() > 100)
+                    runCallback(OGR_CBT_WAIT_RECORDING, NULL);
+                runCallback(OGR_CBT_PROGRESS_RECORDING, &val_for_cb);
             }
             cl->m_jpg_list.emplace_back((uint8_t*)NULL, 0, 0);
             cl->m_jpg_list_ready.notify_one();
             ulj.unlock();
-            cl->m_display_progress.store(!cl->m_destroy.load());
+            cl->m_display_progress.store(!cl->m_destroy);
             cl->m_video_enc_thread.join();
             cl->m_display_progress.store(false);
             std::string f = Recorder::writeMKV(getSavedName() + ".video",
                 getSavedName() + ".audio");
-            if (cl->m_destroy.load())
+            if (cl->m_destroy)
             {
                 return;
             }
+            val_for_cb = 100;
+            runCallback(OGR_CBT_PROGRESS_RECORDING, &val_for_cb);
             if (f.empty())
             {
                 runCallback(OGR_CBT_ERROR_RECORDING, "Failed to mux a mkv.\n");

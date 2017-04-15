@@ -13,7 +13,6 @@
 #include <mkvmuxer/mkvwriter.h>
 #include <mkvparser/mkvparser.h>
 #include <sys/stat.h>
-#include <vpx/vpx_encoder.h>
 
 namespace Recorder
 {
@@ -137,61 +136,69 @@ namespace Recorder
         }
         result = stat(video.c_str(), &st);
         if (result == 0)
-            input = fopen(video.c_str(), "rb");
-        while (result == 0 && fread(buf, 1, 16, input) == 16)
         {
-            uint32_t frame_size, flag;
-            int64_t timestamp;
-            memcpy(&frame_size, buf, sizeof(uint32_t));
-            memcpy(&timestamp, buf + sizeof(uint32_t), sizeof(int64_t));
-            memcpy(&flag, buf + sizeof(uint32_t) + sizeof(int64_t),
-                sizeof(uint32_t));
-            timestamp *= 1000000000ll / getConfig()->m_record_fps;
-            fread(buf, 1, frame_size, input);
-            mkvmuxer::Frame muxer_frame;
-            if (!muxer_frame.Init(buf, frame_size))
+            input = fopen(video.c_str(), "rb");
+            uint32_t private_header_size;
+            fread(&private_header_size, 1, sizeof(uint32_t), input);
+            if (private_header_size > 0)
             {
-                runCallback(OGR_CBT_ERROR_RECORDING, "Failed to construct a"
-                    " frame.\n");
-                return "";
-            }
-            muxer_frame.set_track_number(vid_track);
-            muxer_frame.set_timestamp(timestamp);
-            if (vf == OGR_VF_VP8 || vf == OGR_VF_VP9)
-            {
-                muxer_frame.set_is_key((flag & VPX_FRAME_IS_KEY) != 0);
-            }
-            else
-            {
-                muxer_frame.set_is_key(true);
-            }
-            mkvmuxer::Frame* cur_aud_frame =
-                audio_frames.empty() ? NULL : audio_frames.front();
-            if (cur_aud_frame != NULL)
-            {
-                while (cur_aud_frame->timestamp() < (uint64_t)timestamp)
+                fread(buf, 1, private_header_size, input);
+                if (!vt->SetCodecPrivate(buf, private_header_size))
                 {
-                    if (!muxer_segment.AddGenericFrame(cur_aud_frame))
-                    {
-                        runCallback(OGR_CBT_ERROR_RECORDING, "Could not add"
-                            " audio frame.\n");
-                        return "";
-                    }
-                    delete cur_aud_frame;
-                    audio_frames.pop_front();
-                    if (audio_frames.empty())
-                    {
-                        cur_aud_frame = NULL;
-                        break;
-                    }
-                    cur_aud_frame = audio_frames.front();
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Could not add video"
+                        " private data.\n");
+                    return "";
                 }
             }
-            if (!muxer_segment.AddGenericFrame(&muxer_frame))
+            while (fread(buf, 1, 13, input) == 13)
             {
-                runCallback(OGR_CBT_ERROR_RECORDING, "Could not add video"
-                    " frame.\n");
-                return "";
+                bool key_frame;
+                uint32_t frame_size;
+                int64_t timestamp;
+                memcpy(&frame_size, buf, sizeof(uint32_t));
+                memcpy(&timestamp, buf + sizeof(uint32_t), sizeof(int64_t));
+                memcpy(&key_frame, buf + sizeof(uint32_t) + sizeof(int64_t),
+                    sizeof(bool));
+                timestamp *= 1000000000ll / getConfig()->m_record_fps;
+                fread(buf, 1, frame_size, input);
+                mkvmuxer::Frame muxer_frame;
+                if (!muxer_frame.Init(buf, frame_size))
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Failed to construct"
+                        " a frame.\n");
+                    return "";
+                }
+                muxer_frame.set_track_number(vid_track);
+                muxer_frame.set_timestamp(timestamp);
+                muxer_frame.set_is_key(key_frame);
+                mkvmuxer::Frame* cur_aud_frame =
+                    audio_frames.empty() ? NULL : audio_frames.front();
+                if (cur_aud_frame != NULL)
+                {
+                    while (cur_aud_frame->timestamp() < (uint64_t)timestamp)
+                    {
+                        if (!muxer_segment.AddGenericFrame(cur_aud_frame))
+                        {
+                            runCallback(OGR_CBT_ERROR_RECORDING, "Could not"
+                                " add audio frame.\n");
+                            return "";
+                        }
+                        delete cur_aud_frame;
+                        audio_frames.pop_front();
+                        if (audio_frames.empty())
+                        {
+                            cur_aud_frame = NULL;
+                            break;
+                        }
+                        cur_aud_frame = audio_frames.front();
+                    }
+                }
+                if (!muxer_segment.AddGenericFrame(&muxer_frame))
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Could not add video"
+                        " frame.\n");
+                    return "";
+                }
             }
         }
         free(buf);

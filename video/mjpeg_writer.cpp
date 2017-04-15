@@ -22,6 +22,8 @@ namespace Recorder
             return;
         }
         int64_t frames_encoded = 0;
+        const uint32_t private_header_size = 0;
+        fwrite(&private_header_size, 1, sizeof(uint32_t), mjpeg_writer);
         while (true)
         {
             std::unique_lock<std::mutex> ul(*cl->getJPGListMutex());
@@ -43,7 +45,8 @@ namespace Recorder
             {
                 fwrite(&jpg_size, 1, sizeof(uint32_t), mjpeg_writer);
                 fwrite(&frames_encoded, 1, sizeof(int64_t), mjpeg_writer);
-                fwrite(&jpg_size, 1, sizeof(uint32_t), mjpeg_writer);
+                const bool key_frame = true;
+                fwrite(&key_frame, 1, sizeof(bool), mjpeg_writer);
                 fwrite(jpg, 1, jpg_size, mjpeg_writer);
                 frame_count--;
                 frames_encoded++;
