@@ -91,6 +91,8 @@ typedef enum
     OGR_CBT_START_RECORDING = 0,
     /**
      * A \ref StringCallback which notify the saved filename of recorded file.
+     * This will not be shown if \ref ogrDestroy is called anywhere, which
+     * avoid calling the user_data potentially deleted by user of this library.
      */
     OGR_CBT_SAVED_RECORDING,
     /**
@@ -99,8 +101,10 @@ typedef enum
      */
     OGR_CBT_ERROR_RECORDING,
     /**
-     * A \ref IntCallback which the tells the progress percentage for video
-     * encoding after the issue of \ref ogrStopCapture.
+     * A \ref IntCallback which the tells the progress in percentage about
+     * video encoding after the issue of \ref ogrStopCapture. This will not be
+     * shown if \ref ogrDestroy is called anywhere, which avoid calling the
+     * user_data potentially deleted by user of this library.
      */
     OGR_CBT_PROGRESS_RECORDING,
     /**

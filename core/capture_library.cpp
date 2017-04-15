@@ -242,23 +242,27 @@ void CaptureLibrary::captureConversion(CaptureLibrary* cl)
             ulj.unlock();
             cl->m_display_progress.store(!cl->m_destroy);
             cl->m_video_enc_thread.join();
-            cl->m_display_progress.store(false);
             std::string f = Recorder::writeMKV(getSavedName() + ".video",
                 getSavedName() + ".audio");
             if (cl->m_destroy)
             {
                 return;
             }
-            val_for_cb = 100;
-            runCallback(OGR_CBT_PROGRESS_RECORDING, &val_for_cb);
-            if (f.empty())
+            if (cl->m_display_progress.load())
             {
-                runCallback(OGR_CBT_ERROR_RECORDING, "Failed to mux a mkv.\n");
+                val_for_cb = 100;
+                runCallback(OGR_CBT_PROGRESS_RECORDING, &val_for_cb);
+                if (f.empty())
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Failed to mux a"
+                        " mkv.\n");
+                }
+                else
+                {
+                    runCallback(OGR_CBT_SAVED_RECORDING, f.c_str());
+                }
             }
-            else
-            {
-                runCallback(OGR_CBT_SAVED_RECORDING, f.c_str());
-            }
+            cl->m_display_progress.store(false);
             std::lock_guard<std::mutex> lc(cl->m_capturing_mutex);
             std::lock_guard<std::mutex> lf(cl->m_fbi_mutex);
             cl->m_capturing = false;
