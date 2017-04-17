@@ -17,7 +17,7 @@ namespace Recorder
 {
     // ------------------------------------------------------------------------
     int vpxEncodeFrame(vpx_codec_ctx_t *codec, vpx_image_t *img,
-                       int frame_index, FILE *out)
+                       int64_t frame_index, FILE *out)
     {
         int got_pkts = 0;
         vpx_codec_iter_t iter = NULL;
@@ -82,7 +82,7 @@ namespace Recorder
 
         const unsigned width = cl->getRecorderConfig().m_width;
         const unsigned height = cl->getRecorderConfig().m_height;
-        int frames_encoded = 0;
+        int64_t frames_encoded = 0;
         cfg.g_w = width;
         cfg.g_h = height;
         cfg.g_timebase.num = 1;
@@ -142,12 +142,8 @@ namespace Recorder
             tjFree(jpg);
             vpx_image_t each_frame;
             vpx_img_wrap(&each_frame, VPX_IMG_FMT_I420, width, height, 1, yuv);
-            while (frame_count != 0)
-            {
-                vpxEncodeFrame(&codec, &each_frame, frames_encoded++,
-                    vpx_data);
-                frame_count--;
-            }
+            vpxEncodeFrame(&codec, &each_frame, frames_encoded, vpx_data);
+            frames_encoded += frame_count;
         }
 
         while (vpxEncodeFrame(&codec, NULL, -1, vpx_data));

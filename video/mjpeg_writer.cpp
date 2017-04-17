@@ -41,16 +41,12 @@ namespace Recorder
             }
             cl->getJPGList()->pop_front();
             ul.unlock();
-            while (frame_count != 0)
-            {
-                fwrite(&jpg_size, 1, sizeof(uint32_t), mjpeg_writer);
-                fwrite(&frames_encoded, 1, sizeof(int64_t), mjpeg_writer);
-                const bool key_frame = true;
-                fwrite(&key_frame, 1, sizeof(bool), mjpeg_writer);
-                fwrite(jpg, 1, jpg_size, mjpeg_writer);
-                frame_count--;
-                frames_encoded++;
-            }
+            fwrite(&jpg_size, 1, sizeof(uint32_t), mjpeg_writer);
+            fwrite(&frames_encoded, 1, sizeof(int64_t), mjpeg_writer);
+            const bool key_frame = true;
+            fwrite(&key_frame, 1, sizeof(bool), mjpeg_writer);
+            fwrite(jpg, 1, jpg_size, mjpeg_writer);
+            frames_encoded += frame_count;
             tjFree(jpg);
         }
         fclose(mjpeg_writer);
