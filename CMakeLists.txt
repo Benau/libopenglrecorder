@@ -10,7 +10,8 @@ set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 option(BUILD_SHARED_LIBS "Build shared library" ON)
-option(BUILD_WITH_VPX "Build libopenglrecorder with libvpx encoder" ON)
+option(BUILD_WITH_VPX "Enable LibVPX encoder" ON)
+option(BUILD_WITH_H264 "Enable OpenH264 encoder" ON)
 option(BUILD_RECORDER_WITH_SOUND "Build libopenglrecorder with sound recording support" ON)
 CMAKE_DEPENDENT_OPTION(BUILD_PULSE_WO_DL "If pulseaudio in your distro / system is optional, turn this off to load pulse with libdl"
     ON "BUILD_RECORDER_WITH_SOUND;UNIX" OFF)
@@ -56,7 +57,6 @@ if (BUILD_RECORDER_WITH_SOUND)
 endif()
 
 if (BUILD_WITH_VPX)
-    add_definitions(-DENABLE_VPX)
     if (UNIX)
         pkg_check_modules(VPX vpx)
     else()
@@ -64,7 +64,30 @@ if (BUILD_WITH_VPX)
         find_library(VPX_LIBRARIES NAMES libvpx PATHS "${PROJECT_SOURCE_DIR}/dependencies/lib")
     endif()
     include_directories(${VPX_INCLUDEDIR})
-    mark_as_advanced(VPX_LIBRARIES VPX_INCLUDEDIR)
+    if (NOT VPX_INCLUDEDIR OR NOT VPX_LIBRARIES)
+        set(BUILD_WITH_VPX OFF CACHE BOOL "Enable LibVPX encoder" FORCE)
+        message(WARNING "LibVPX not found, disable VP8/VP9 encoder.")
+    else()
+        add_definitions(-DENABLE_VPX)
+        mark_as_advanced(VPX_LIBRARIES VPX_INCLUDEDIR)
+    endif()
+endif()
+
+if (BUILD_WITH_H264)
+    if (UNIX)
+        pkg_check_modules(OPENH264 openh264)
+    else()
+        find_path(OPENH264_INCLUDEDIR NAMES wels/codec_ver.h PATHS "${PROJECT_SOURCE_DIR}/dependencies/include")
+        find_library(OPENH264_LIBRARIES NAMES openh264 PATHS "${PROJECT_SOURCE_DIR}/dependencies/lib")
+    endif()
+    include_directories(${OPENH264_INCLUDEDIR})
+    if (NOT OPENH264_INCLUDEDIR OR NOT OPENH264_LIBRARIES)
+        set(BUILD_WITH_H264 OFF CACHE BOOL "Enable OpenH264 encoder" FORCE)
+        message(WARNING "OpenH264 not found, disable h264 encoder.")
+    else()
+        add_definitions(-DENABLE_H264)
+        mark_as_advanced(OPENH264_LIBRARIES OPENH264_INCLUDEDIR)
+    endif()
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
@@ -81,6 +104,7 @@ set(SOURCES
     libwebm/mkvmuxer/mkvmuxerutil.cc
     libwebm/mkvmuxer/mkvwriter.cc
     video/mjpeg_writer.cpp
+    video/openh264_encoder.cpp
     video/vpx_encoder.cpp
 )
 
@@ -101,6 +125,10 @@ endif()
 
 if (BUILD_WITH_VPX)
     target_link_libraries(openglrecorder ${VPX_LIBRARIES})
+endif()
+
+if (BUILD_WITH_H264)
+    target_link_libraries(openglrecorder ${OPENH264_LIBRARIES})
 endif()
 
 target_link_libraries(openglrecorder ${TURBOJPEG_LIBRARIES})

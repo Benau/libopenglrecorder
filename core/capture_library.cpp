@@ -12,6 +12,7 @@
 #include "core/mkv_writer.hpp"
 #include "core/recorder_private.hpp"
 #include "video/mjpeg_writer.hpp"
+#include "video/openh264_encoder.hpp"
 #include "video/vpx_encoder.hpp"
 
 const uint32_t E_GL_PIXEL_PACK_BUFFER = 0x88EB;
@@ -97,6 +98,7 @@ void CaptureLibrary::reset()
         m_video_enc_thread = std::thread(Recorder::mjpegWriter, this);
         break;
     case OGR_VF_H264:
+        m_video_enc_thread = std::thread(Recorder::openh264Encoder, this);
         break;
     default:
         break;

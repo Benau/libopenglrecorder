@@ -15,6 +15,7 @@ This software is released under BSD 3-clause license, see [`LICENSE`](/LICENSE).
 ## Dependencies
   * TurboJPEG (required)
   * LibVPX (optional for VP8 / VP9 encoding)
+  * OpenH264 (optional for H264 encoding)
   * Vorbis (optional if build without audio recording)
   * PulseAudio (optional if build without audio recording in Linux)
 
@@ -47,7 +48,7 @@ sudo make install
 Prebulit binaries are avaliable [here](https://github.com/supertuxkart/dependencies).
 Copy the suitable files in windows(_64bit)/dependencies/{dll,lib} for MSVC
 (or mingw if you are using cygwin), you will need
-**openglrecorder.dll**, **libvorbisenc.dll**, **libvorbis.dll**, **libogg.dll**
+**openglrecorder.dll**, **libvorbisenc.dll**, **libvorbis.dll**, **libogg.dll**,
 **libvpx.dll** and **libturbojpeg.dll** for runtime, and **openglrecorder.lib**
 for linking. For compiling yourself, just copy the whole dependencies directory
 inside here, and run CMake to configure, make sure that no openglrecorder
@@ -55,4 +56,4 @@ prebuilt binaries or header file are copied.
 
 ## Usage of this library
 
-See [`USAGE.md`](/USAGE.md) for details,
+See [`USAGE.md`](/USAGE.md) for details.

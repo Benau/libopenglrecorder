@@ -18,7 +18,7 @@ libopenglrecorder initialization after them:
     ogrRegReadPixelsFunction(glReadPixels);
     ogrRegPBOFunctions(glGenBuffers, glBindBuffer, glBufferData,
     glDeleteBuffers, glMapBuffer, glUnmapBuffer);
-    ogrSetSavedName("record"); 
+    ogrSetSavedName("record");
 ```
 
 This will enable Vorbis and VP8 encoding with triple buffering enabled which saves
