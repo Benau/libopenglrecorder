@@ -7,6 +7,11 @@ himself and load suitable callbacks. All functions exposed by
 libopenglrecorder should be called by the same thread which created the
 OpenGL context. Currently using in Linux and Windows is supported.
 
+The sounding recording in Linux is done by PulseAudio and Windows by Wasapi,
+so for Linux make sure that your app is playing sound through PulseAudio, while
+in Windows make sure Wasapi is present which means Windows Vista or later.
+You can optionally link PulseAudio with DL for lazy loading libpulse.
+
 One example usage is to create an advanced bundled-recorder for game out of it.
 
 ## License

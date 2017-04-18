@@ -21,17 +21,15 @@ libopenglrecorder initialization after them:
     ogrSetSavedName("record");
 ```
 
-This will enable Vorbis and VP8 encoding with triple buffering enabled which saves
-a **record.webm** in the current directory. `ogrSetSavedNamed();` or `ogrInitConfig();`
+This will enable Vorbis and VP8 encoding with triple buffering enabled which
+saves a **record.webm** in the current directory. Triple buffering is only
+possible if the OpenGL context you created supports pixel buffer object, which
+is since OpenGL 2.1 or OpenGL ES 3.0. `ogrSetSavedNamed();` or `ogrInitConfig();`
 should only be called when there is no capturing happening, see `ogrCapturing();`.
 
 You may adjust the settings above as names imply (see [`openglrecorder.h`](/openglrecorder.h) for details),
 use `OGR_VF_MJPEG` will allow a faster saving of recording with better quality,
 though the file will be large.
-
-The sounding recording in Linux is done by PulseAudio and Windows by Wasapi,
-so for Linux make sure that your app is playing sound through PulseAudio, while
-in Windows make sure Wasapi is present which means Windows Vista or later.
 
 Notice: In Windows you may need wrapper for those gl* functions, as some of
 them may have a `__stdcall` supplied, this is true for GLEW at least, this is
