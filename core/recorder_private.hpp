@@ -18,6 +18,7 @@ extern ogrFucBindBuffer ogrBindBuffer;
 extern ogrFucBufferData ogrBufferData;
 extern ogrFucDeleteBuffers ogrDeleteBuffers;
 extern ogrFucMapBuffer ogrMapBuffer;
+extern ogrFucMapBufferRange ogrMapBufferRange;
 extern ogrFucUnmapBuffer ogrUnmapBuffer;
 
 RecorderConfig* getConfig();

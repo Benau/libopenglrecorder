@@ -24,6 +24,7 @@ ogrFucBindBuffer ogrBindBuffer = NULL;
 ogrFucBufferData ogrBufferData = NULL;
 ogrFucDeleteBuffers ogrDeleteBuffers = NULL;
 ogrFucMapBuffer ogrMapBuffer = NULL;
+ogrFucMapBufferRange ogrMapBufferRange = NULL;
 ogrFucUnmapBuffer ogrUnmapBuffer = NULL;
 // ============================================================================
 std::unique_ptr<RecorderConfig> g_recorder_config(nullptr);
@@ -275,6 +276,28 @@ void ogrRegPBOFunctions(ogrFucGenBuffers gen_buffers,
     ogrDeleteBuffers = delete_buffers;
     assert(map_buffer != NULL);
     ogrMapBuffer = map_buffer;
+    assert(unmap_buffer != NULL);
+    ogrUnmapBuffer = unmap_buffer;
+}   // ogrRegPBOFunctions
+
+// ----------------------------------------------------------------------------
+void ogrRegPBOFunctionsRange(ogrFucGenBuffers gen_buffers,
+                             ogrFucBindBuffer bind_buffer,
+                             ogrFucBufferData buffer_data,
+                             ogrFucDeleteBuffers delete_buffers,
+                             ogrFucMapBufferRange map_buffer_range,
+                             ogrFucUnmapBuffer unmap_buffer)
+{
+    assert(gen_buffers != NULL);
+    ogrGenBuffers = gen_buffers;
+    assert(bind_buffer != NULL);
+    ogrBindBuffer = bind_buffer;
+    assert(buffer_data != NULL);
+    ogrBufferData = buffer_data;
+    assert(delete_buffers != NULL);
+    ogrDeleteBuffers = delete_buffers;
+    assert(map_buffer_range != NULL);
+    ogrMapBufferRange = map_buffer_range;
     assert(unmap_buffer != NULL);
     ogrUnmapBuffer = unmap_buffer;
 }   // ogrRegPBOFunctions

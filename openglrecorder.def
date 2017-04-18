@@ -11,5 +11,6 @@ ogrRegIntCallback
 ogrCapturing
 ogrRegReadPixelsFunction
 ogrRegPBOFunctions
+ogrRegPBOFunctionsRange
 ogrCheckAudioEncoder
 ogrCheckVideoEncoder

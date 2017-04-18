@@ -20,6 +20,7 @@ const uint32_t E_GL_STREAM_READ = 0x88E1;
 const uint32_t E_GL_READ_ONLY = 0x88B8;
 const uint32_t E_GL_RGBA = 0x1908;
 const uint32_t E_GL_UNSIGNED_BYTE = 0x1401;
+const uint32_t E_GL_MAP_READ_BIT = 0x0001;
 
 // ----------------------------------------------------------------------------
 CaptureLibrary::CaptureLibrary(RecorderConfig* rc)
@@ -189,8 +190,20 @@ void CaptureLibrary::capture()
             {
                 pbo_read = m_pbo_use % 3;
                 ogrBindBuffer(E_GL_PIXEL_PACK_BUFFER, m_pbo[pbo_read]);
-                void* ptr = ogrMapBuffer(E_GL_PIXEL_PACK_BUFFER,
-                    E_GL_READ_ONLY);
+                void* ptr;
+                if (ogrMapBuffer != NULL)
+                {
+                    ptr = ogrMapBuffer(E_GL_PIXEL_PACK_BUFFER, E_GL_READ_ONLY);
+                }
+                else if (ogrMapBufferRange != NULL)
+                {
+                    ptr = ogrMapBufferRange(E_GL_PIXEL_PACK_BUFFER, 0, size,
+                        E_GL_MAP_READ_BIT);
+                }
+                else
+                {
+                    assert(false && "Missing callback for MapBuffer");
+                }
                 memcpy(m_fbi, ptr, size);
                 ogrUnmapBuffer(E_GL_PIXEL_PACK_BUFFER);
             }

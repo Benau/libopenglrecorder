@@ -174,6 +174,8 @@ typedef void(*ogrFucBufferData)(unsigned int, ptrdiff_t, const void*,
     unsigned int);
 typedef void(*ogrFucDeleteBuffers)(int, const unsigned int*);
 typedef void*(*ogrFucMapBuffer)(unsigned int, unsigned int);
+typedef void*(*ogrFucMapBufferRange)(unsigned int, ptrdiff_t, ptrdiff_t,
+    unsigned int);
 typedef unsigned char(*ogrFucUnmapBuffer)(unsigned int);
 
 #ifdef  __cplusplus
@@ -240,6 +242,13 @@ void ogrRegReadPixelsFunction(ogrFucReadPixels);
 void ogrRegPBOFunctions(ogrFucGenBuffers, ogrFucBindBuffer, ogrFucBufferData,
                         ogrFucDeleteBuffers, ogrFucMapBuffer,
                         ogrFucUnmapBuffer);
+/**
+ * Set opengl functions for using PBOs with glMapBufferRange (required if
+ * triple buffering is used), useful for OpenGL ES 3.
+ */
+void ogrRegPBOFunctionsRange(ogrFucGenBuffers, ogrFucBindBuffer, ogrFucBufferData,
+                             ogrFucDeleteBuffers, ogrFucMapBufferRange,
+                             ogrFucUnmapBuffer);
 /**
  * Check if an audio encoder in \ref AudioFormat is supported.
  * Return 1 if supported.
