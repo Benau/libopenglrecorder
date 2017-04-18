@@ -13,9 +13,9 @@ class CaptureLibrary;
 namespace Recorder
 {
 #ifdef ENABLE_VPX
-    void vpxEncoder(CaptureLibrary* cl);
+    int vpxEncoder(CaptureLibrary* cl);
 #else
-    inline void vpxEncoder(CaptureLibrary* cl) {}
+    inline int vpxEncoder(CaptureLibrary* cl) { return 0; }
 #endif
 };
 #endif

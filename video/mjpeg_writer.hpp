@@ -12,7 +12,7 @@ class CaptureLibrary;
 
 namespace Recorder
 {
-    void mjpegWriter(CaptureLibrary* cl);
+    int mjpegWriter(CaptureLibrary* cl);
 };
 
 #endif

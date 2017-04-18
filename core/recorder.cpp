@@ -5,8 +5,12 @@
  * tree.
  */
 
+#include "audio/vorbis_encoder.hpp"
 #include "core/capture_library.hpp"
 #include "core/recorder_private.hpp"
+#include "video/mjpeg_writer.hpp"
+#include "video/openh264_encoder.hpp"
+#include "video/vpx_encoder.hpp"
 
 #include <array>
 #include <cassert>
@@ -86,6 +90,12 @@ int ogrInitConfig(RecorderConfig* rc)
     while (new_rc->m_height % 2 != 0)
     {
         new_rc->m_height--;
+    }
+    if (ogrCheckVideoEncoder(new_rc->m_video_format) == 0)
+    {
+        runCallback(OGR_CBT_ERROR_RECORDING, "Unsupported video format,"
+            " fallback to MJPEG\n");
+        new_rc->m_video_format = OGR_VF_MJPEG;
     }
     return 1;
 }   // ogrInitConfig
@@ -318,3 +328,31 @@ void ogrRegPBOFunctions(ogrFucGenBuffers gen_buffers,
     {
     }   // setThreadName
 #endif
+// ----------------------------------------------------------------------------
+int ogrCheckAudioEncoder(AudioFormat af)
+{
+    switch (af)
+    {
+    case OGR_AF_VORBIS:
+        return Recorder::vorbisEncoder(NULL);
+    default:
+        return 0;
+    }
+}   // ogrCheckAudioEncoder
+
+// ----------------------------------------------------------------------------
+int ogrCheckVideoEncoder(VideoFormat vf)
+{
+    switch (vf)
+    {
+    case OGR_VF_VP8:
+    case OGR_VF_VP9:
+        return Recorder::vpxEncoder(NULL);
+    case OGR_VF_MJPEG:
+        return Recorder::mjpegWriter(NULL);
+    case OGR_VF_H264:
+        return Recorder::openh264Encoder(NULL);
+    default:
+        return 0;
+    }
+}   // ogrCheckVideoEncoder

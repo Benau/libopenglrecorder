@@ -15,8 +15,11 @@
 
 namespace Recorder
 {
-    void vorbisEncoder(AudioEncoderData* aed)
+    int vorbisEncoder(AudioEncoderData* aed)
     {
+        // Runtime encoder checking
+        if (aed == NULL)
+            return 1;
         setThreadName("vorbisEncoder");
         vorbis_info vi;
         vorbis_dsp_state vd;
@@ -39,14 +42,14 @@ namespace Recorder
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Header is too long for"
                 " vorbis.\n");
-            return;
+            return 1;
         }
         FILE* vb_data = fopen((getSavedName() + ".audio").c_str(), "wb");
         if (vb_data == NULL)
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to open file for"
                 " encoding vorbis.\n");
-            return;
+            return 1;
         }
         fwrite(&aed->m_sample_rate, 1, sizeof(uint32_t), vb_data);
         fwrite(&aed->m_channels, 1, sizeof(uint32_t), vb_data);
@@ -132,6 +135,7 @@ namespace Recorder
         vorbis_comment_clear(&vc);
         vorbis_info_clear(&vi);
         fclose(vb_data);
+        return 1;
     }   // vorbisEncoder
 }
 

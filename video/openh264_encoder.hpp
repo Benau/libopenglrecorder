@@ -13,9 +13,9 @@ class CaptureLibrary;
 namespace Recorder
 {
 #ifdef ENABLE_H264
-    void openh264Encoder(CaptureLibrary* cl);
+    int openh264Encoder(CaptureLibrary* cl);
 #else
-    inline void openh264Encoder(CaptureLibrary* cl) {}
+    inline int openh264Encoder(CaptureLibrary* cl) { return 0; }
 #endif
 };
 #endif

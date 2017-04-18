@@ -16,15 +16,18 @@
 namespace Recorder
 {
     // ------------------------------------------------------------------------
-    void openh264Encoder(CaptureLibrary* cl)
+    int openh264Encoder(CaptureLibrary* cl)
     {
+        // Runtime encoder checking
+        if (cl == NULL)
+            return 1;
         setThreadName("openH264Encoder");
         FILE* h264_data = fopen((getSavedName() + ".video").c_str(), "wb");
         if (h264_data == NULL)
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to open file for"
                 " writing h264.\n");
-            return;
+            return 1;
         }
 
         ISVCEncoder* o264_encoder = NULL;
@@ -33,7 +36,7 @@ namespace Recorder
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to create openh264"
                 " encoder.\n");
-            return;
+            return 1;
         }
 
         const unsigned width = cl->getRecorderConfig().m_width;
@@ -81,7 +84,7 @@ namespace Recorder
             fclose(h264_data);
             o264_encoder->Uninitialize();
             WelsDestroySVCEncoder(o264_encoder);
-            return;
+            return 1;
         }
 
         const uint8_t one = 1;
@@ -219,6 +222,7 @@ namespace Recorder
         o264_encoder->Uninitialize();
         WelsDestroySVCEncoder(o264_encoder);
         fclose(h264_data);
+        return 1;
     }   // openh264Encoder
 }
 

@@ -11,15 +11,18 @@
 namespace Recorder
 {
     // ------------------------------------------------------------------------
-    void mjpegWriter(CaptureLibrary* cl)
+    int mjpegWriter(CaptureLibrary* cl)
     {
+        // Runtime encoder checking
+        if (cl == NULL)
+            return 1;
         setThreadName("mjpegWriter");
         FILE* mjpeg_writer = fopen((getSavedName() + ".video").c_str(), "wb");
         if (mjpeg_writer == NULL)
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to open file for"
                 " writing mjpeg.\n");
-            return;
+            return 1;
         }
         int64_t frames_encoded = 0;
         const uint32_t private_header_size = 0;
@@ -50,5 +53,6 @@ namespace Recorder
             tjFree(jpg);
         }
         fclose(mjpeg_writer);
+        return 1;
     }   // mjpegWriter
 };

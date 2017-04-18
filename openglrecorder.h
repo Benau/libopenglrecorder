@@ -240,6 +240,16 @@ void ogrRegReadPixelsFunction(ogrFucReadPixels);
 void ogrRegPBOFunctions(ogrFucGenBuffers, ogrFucBindBuffer, ogrFucBufferData,
                         ogrFucDeleteBuffers, ogrFucMapBuffer,
                         ogrFucUnmapBuffer);
+/**
+ * Check if an audio encoder in \ref AudioFormat is supported.
+ * Return 1 if supported.
+ */
+int ogrCheckAudioEncoder(AudioFormat);
+/**
+ * Check if a video encoder in \ref VideoFormat is supported.
+ * Return 1 if supported.
+ */
+int ogrCheckVideoEncoder(VideoFormat);
 #ifdef  __cplusplus
 }
 #endif

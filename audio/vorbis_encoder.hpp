@@ -12,9 +12,9 @@ struct AudioEncoderData;
 namespace Recorder
 {
 #ifdef ENABLE_REC_SOUND
-    void vorbisEncoder(AudioEncoderData* aed);
+    int vorbisEncoder(AudioEncoderData* aed);
 #else
-    inline void vorbisEncoder(AudioEncoderData* aed) {}
+    inline int vorbisEncoder(AudioEncoderData* aed) { return 0; }
 #endif
 };
 

@@ -46,15 +46,18 @@ namespace Recorder
         return got_pkts;
     }   // vpxEncodeFrame
     // ------------------------------------------------------------------------
-    void vpxEncoder(CaptureLibrary* cl)
+    int vpxEncoder(CaptureLibrary* cl)
     {
+        // Runtime encoder checking
+        if (cl == NULL)
+            return 1;
         setThreadName("vpxEncoder");
         FILE* vpx_data = fopen((getSavedName() + ".video").c_str(), "wb");
         if (vpx_data == NULL)
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to open file for"
                 " writing vpx.\n");
-            return;
+            return 1;
         }
 
         vpx_codec_ctx_t codec;
@@ -77,7 +80,7 @@ namespace Recorder
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to get default vpx"
                 " codec config.\n");
-            return;
+            return 1;
         }
 
         const unsigned width = cl->getRecorderConfig().m_width;
@@ -95,7 +98,7 @@ namespace Recorder
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to initialize vpx"
                 " encoder.\n");
             fclose(vpx_data);
-            return;
+            return 1;
         }
         float last_size = -1.0f;
         int cur_finished_count = 0;
@@ -151,10 +154,11 @@ namespace Recorder
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Failed to destroy vpx"
                 " codec.\n");
-            return;
+            return 1;
         }
         delete[] yuv;
         fclose(vpx_data);
+        return 1;
     }   // vpxEncoder
 }
 #endif
