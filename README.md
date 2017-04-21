@@ -29,7 +29,7 @@ This software is released under BSD 3-clause license, see [`LICENSE`](/LICENSE).
 Install the following packages, Ubuntu command:
 
 ```
-sudo apt-get install build-essential cmake libjpeg-turbo-devel \
+sudo apt-get install build-essential cmake libturbojpeg \
 libvpx-dev libogg-dev libvorbisenc2 libvorbis-dev \
 libpulse-dev pkg-config
 ```
