@@ -74,7 +74,7 @@ namespace Recorder
         param.sSpatialLayers[0].uiProfileIdc = PRO_HIGH;
         o264_encoder->InitializeExt(&param);
 
-        SFrameBSInfo fbi = {0};
+        SFrameBSInfo fbi;
         memset(&fbi, 0, sizeof(SFrameBSInfo));
         ret = o264_encoder->EncodeParameterSets(&fbi);
         if (ret != cmResultSuccess)

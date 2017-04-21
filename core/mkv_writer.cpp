@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstring>
 #include <list>
+#include <memory>
 #include <mkvmuxer/mkvmuxer.h>
 #include <mkvmuxer/mkvwriter.h>
 #include <mkvparser/mkvparser.h>
@@ -35,28 +36,44 @@ namespace Recorder
         if (!muxer_segment.Init(&writer))
         {
             runCallback(OGR_CBT_ERROR_RECORDING, "Could not initialize muxer"
-                " segment.\n");;
+                " segment.\n");
             return "";
         }
-        std::list<mkvmuxer::Frame*> audio_frames;
-        const unsigned min_buf_size = std::max(getConfig()->m_height *
+
+        std::list<std::unique_ptr<mkvmuxer::Frame> > audio_frames;
+        const unsigned max_buf_size = std::max(getConfig()->m_height *
             getConfig()->m_width * 3, unsigned(1024 * 1024));
-        uint8_t* buf = (uint8_t*)malloc(min_buf_size);
-        if (buf == NULL)
-        {
-            runCallback(OGR_CBT_ERROR_RECORDING, "Failed to allocate buffer"
-                " for muxing.\n");;
-            return "";
-        }
+        std::unique_ptr<uint8_t[]> buf_holder(new uint8_t[max_buf_size]);
+        uint8_t* buf = buf_holder.get();
+
         FILE* input = NULL;
         struct stat st;
         int result = stat(audio.c_str(), &st);
+        size_t readed = 0;
         if (result == 0)
         {
             input = fopen(audio.c_str(), "rb");
             uint32_t sample_rate, channels;
-            fread(&sample_rate, 1, sizeof(uint32_t), input);
-            fread(&channels, 1, sizeof(uint32_t), input);
+            readed = fread(&sample_rate, 1, sizeof(uint32_t), input);
+            if (readed != sizeof(uint32_t))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for sample"
+                    " rate.\n");
+                return "";
+            }
+            readed = fread(&channels, 1, sizeof(uint32_t), input);
+            if (readed != sizeof(uint32_t))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for"
+                    " channels.\n");
+                return "";
+            }
+            if (sample_rate > 48000 || channels > 256)
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING, "Invalid values for"
+                    " sample rate or channels.\n");
+                return "";
+            }
             uint64_t aud_track = muxer_segment.AddAudioTrack(sample_rate, channels,
                 0);
             if (!aud_track)
@@ -74,13 +91,28 @@ namespace Recorder
                 return "";
             }
             uint32_t codec_private_size = 0;
-            fread(&codec_private_size, 1, sizeof(uint32_t), input);
-            fread(buf, 1, codec_private_size, input);
-            if (!at->SetCodecPrivate(buf, codec_private_size))
+            readed = fread(&codec_private_size, 1, sizeof(uint32_t), input);
+            if (readed != sizeof(uint32_t))
             {
-                runCallback(OGR_CBT_ERROR_RECORDING, "Could not add audio"
-                    " private data.\n");
+                runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for codec"
+                    " private.\n");
                 return "";
+            }
+            if (codec_private_size > 0 && codec_private_size < max_buf_size)
+            {
+                readed = fread(buf, 1, codec_private_size, input);
+                if (readed != codec_private_size)
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for"
+                        " codec private size.\n");
+                    return "";
+                }
+                if (!at->SetCodecPrivate(buf, codec_private_size))
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Could not add audio"
+                        " private data.\n");
+                    return "";
+                }
             }
             while (fread(buf, 1, 12, input) == 12)
             {
@@ -88,7 +120,19 @@ namespace Recorder
                 int64_t timestamp;
                 memcpy(&frame_size, buf, sizeof(uint32_t));
                 memcpy(&timestamp, buf + sizeof(uint32_t), sizeof(int64_t));
-                fread(buf, 1, frame_size, input);
+                if (frame_size > max_buf_size)
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Invalid frame size"
+                        " for audio.\n");
+                    return "";
+                }
+                readed = fread(buf, 1, frame_size, input);
+                if (readed != frame_size)
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for"
+                        " audio frame size.\n");
+                    return "";
+                }
                 mkvmuxer::Frame* audio_frame = new mkvmuxer::Frame();
                 if (!audio_frame->Init(buf, frame_size))
                 {
@@ -99,7 +143,7 @@ namespace Recorder
                 audio_frame->set_track_number(aud_track);
                 audio_frame->set_timestamp(timestamp);
                 audio_frame->set_is_key(true);
-                audio_frames.push_back(audio_frame);
+                audio_frames.emplace_back(audio_frame);
             }
             fclose(input);
             input = NULL;
@@ -147,12 +191,24 @@ namespace Recorder
         if (result == 0)
         {
             input = fopen(video.c_str(), "rb");
-            uint32_t private_header_size;
-            fread(&private_header_size, 1, sizeof(uint32_t), input);
-            if (private_header_size > 0)
+            uint32_t codec_private_size;
+            readed = fread(&codec_private_size, 1, sizeof(uint32_t), input);
+            if (readed != sizeof(uint32_t))
             {
-                fread(buf, 1, private_header_size, input);
-                if (!vt->SetCodecPrivate(buf, private_header_size))
+                runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for codec"
+                    " private.\n");
+                return "";
+            }
+            if (codec_private_size > 0 && codec_private_size < max_buf_size)
+            {
+                readed = fread(buf, 1, codec_private_size, input);
+                if (readed != codec_private_size)
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for"
+                        " codec private size.\n");
+                    return "";
+                }
+                if (!vt->SetCodecPrivate(buf, codec_private_size))
                 {
                     runCallback(OGR_CBT_ERROR_RECORDING, "Could not add video"
                         " private data.\n");
@@ -165,11 +221,23 @@ namespace Recorder
                 uint32_t frame_size;
                 int64_t timestamp;
                 memcpy(&frame_size, buf, sizeof(uint32_t));
+                if (frame_size > max_buf_size)
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Invalid frame size"
+                        " for video.\n");
+                    return "";
+                }
                 memcpy(&timestamp, buf + sizeof(uint32_t), sizeof(int64_t));
                 memcpy(&key_frame, buf + sizeof(uint32_t) + sizeof(int64_t),
                     sizeof(bool));
                 timestamp *= 1000000000ll / getConfig()->m_record_fps;
-                fread(buf, 1, frame_size, input);
+                readed = fread(buf, 1, frame_size, input);
+                if (readed != frame_size)
+                {
+                    runCallback(OGR_CBT_ERROR_RECORDING, "Invalid read for"
+                        " video frame size.\n");
+                    return "";
+                }
                 mkvmuxer::Frame muxer_frame;
                 if (!muxer_frame.Init(buf, frame_size))
                 {
@@ -181,7 +249,7 @@ namespace Recorder
                 muxer_frame.set_timestamp(timestamp);
                 muxer_frame.set_is_key(key_frame);
                 mkvmuxer::Frame* cur_aud_frame =
-                    audio_frames.empty() ? NULL : audio_frames.front();
+                    audio_frames.empty() ? NULL : audio_frames.front().get();
                 if (cur_aud_frame != NULL)
                 {
                     while (cur_aud_frame->timestamp() < (uint64_t)timestamp)
@@ -192,14 +260,13 @@ namespace Recorder
                                 " add audio frame.\n");
                             return "";
                         }
-                        delete cur_aud_frame;
                         audio_frames.pop_front();
                         if (audio_frames.empty())
                         {
                             cur_aud_frame = NULL;
                             break;
                         }
-                        cur_aud_frame = audio_frames.front();
+                        cur_aud_frame = audio_frames.front().get();
                     }
                 }
                 if (!muxer_segment.AddGenericFrame(&muxer_frame))
@@ -210,12 +277,9 @@ namespace Recorder
                 }
             }
         }
-        free(buf);
         if (input)
-            fclose(input);
-        for (mkvmuxer::Frame* aud_frame : audio_frames)
         {
-            delete aud_frame;
+            fclose(input);
         }
         if (remove(video.c_str()) != 0)
         {
