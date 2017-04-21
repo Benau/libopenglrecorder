@@ -7,6 +7,7 @@
 
 #include "core/recorder_private.hpp"
 
+#include <algorithm>
 #include <cstring>
 #include <list>
 #include <mkvmuxer/mkvmuxer.h>
@@ -38,7 +39,15 @@ namespace Recorder
             return "";
         }
         std::list<mkvmuxer::Frame*> audio_frames;
-        uint8_t* buf = (uint8_t*)malloc(1024 * 1024);
+        const unsigned min_buf_size = std::max(getConfig()->m_height *
+            getConfig()->m_width * 3, unsigned(1024 * 1024));
+        uint8_t* buf = (uint8_t*)malloc(min_buf_size);
+        if (buf == NULL)
+        {
+            runCallback(OGR_CBT_ERROR_RECORDING, "Failed to allocate buffer"
+                " for muxing.\n");;
+            return "";
+        }
         FILE* input = NULL;
         struct stat st;
         int result = stat(audio.c_str(), &st);
@@ -64,7 +73,7 @@ namespace Recorder
                     " track.\n");
                 return "";
             }
-            uint32_t codec_private_size;
+            uint32_t codec_private_size = 0;
             fread(&codec_private_size, 1, sizeof(uint32_t), input);
             fread(buf, 1, codec_private_size, input);
             if (!at->SetCodecPrivate(buf, codec_private_size))
