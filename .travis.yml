@@ -1,0 +1,33 @@
+dist: trusty
+sudo: true
+language: cpp
+compiler:
+  - gcc
+
+matrix:
+  fast_finish: true
+
+env:
+  matrix:
+    - BUILD_TYPE="Debug"
+    - BUILD_TYPE="Release"
+
+addons:
+  apt:
+    packages:
+    - build-essential
+    - cmake
+    - libogg-dev
+    - libpulse-dev
+    - libpng-dev
+    - libturbojpeg
+    - libvorbis-dev
+    - libvorbisenc2
+    - libvpx-dev
+    - pkg-config
+
+script:
+  - mkdir "build"
+  - cd "build"
+  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+  - make VERBOSE=1 -j 4
