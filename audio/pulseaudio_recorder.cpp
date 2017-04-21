@@ -548,23 +548,41 @@ namespace Recorder
                     pa_data->dropStream();
                 continue;
             }
-            bool buf_full = readed + (unsigned)bytes > frag_size;
-            unsigned copy_size = buf_full ?
-                frag_size - readed : (unsigned)bytes;
-            memcpy(each_pcm_buf + readed, data, copy_size);
+            unsigned copy_bytes = (unsigned)bytes;
+            bool buf_full = readed + copy_bytes > frag_size;
             if (buf_full)
             {
+                copy_bytes = frag_size - readed;
+                memcpy(each_pcm_buf + readed, data, copy_bytes);
                 std::unique_lock<std::mutex> ul(pcm_mutex);
                 pcm_data.push_back(each_pcm_buf);
                 pcm_cv.notify_one();
                 ul.unlock();
+                unsigned remaining_bytes = (unsigned)bytes - copy_bytes;
+                unsigned count = 0;
+                while (remaining_bytes > frag_size)
+                {
+                    each_pcm_buf = new int8_t[frag_size]();
+                    memcpy(each_pcm_buf,
+                        (uint8_t*)data + copy_bytes + frag_size * count,
+                        frag_size);
+                    std::unique_lock<std::mutex> ul(pcm_mutex);
+                    pcm_data.push_back(each_pcm_buf);
+                    pcm_cv.notify_one();
+                    ul.unlock();
+                    remaining_bytes -= frag_size;
+                    count++;
+                }
                 each_pcm_buf = new int8_t[frag_size]();
-                readed = (unsigned)bytes - copy_size;
-                memcpy(each_pcm_buf, (uint8_t*)data + copy_size, readed);
+                readed = remaining_bytes;
+                memcpy(each_pcm_buf,
+                    (uint8_t*)data + copy_bytes + frag_size * count,
+                    remaining_bytes);
             }
             else
             {
-                readed += (unsigned)bytes;
+                memcpy(each_pcm_buf + readed, data, copy_bytes);
+                readed += copy_bytes;
             }
             pa_data->dropStream();
         }

@@ -275,28 +275,50 @@ namespace Recorder
             }
             const unsigned bytes = aed.m_channels * (wasapi_data->m_wav_format
                 ->wBitsPerSample / 8) * packet_length;
-            bool buf_full = readed + bytes > frag_size;
-            unsigned copy_size = buf_full ? frag_size - readed : bytes;
-            if (!(flags & AUDCLNT_BUFFERFLAGS_SILENT))
-            {
-                memcpy(each_audio_buf + readed, data, copy_size);
-            }
+            unsigned copy_bytes = bytes;
+            bool buf_full = readed + copy_bytes > frag_size;
             if (buf_full)
             {
+                copy_bytes = frag_size - readed;
+                memcpy(each_audio_buf + readed, data, copy_bytes);
                 std::unique_lock<std::mutex> ul(audio_mutex);
                 audio_data.push_back(each_audio_buf);
                 audio_cv.notify_one();
                 ul.unlock();
+                unsigned remaining_bytes = (unsigned)bytes - copy_bytes;
+                unsigned count = 0;
+                while (remaining_bytes > frag_size)
+                {
+                    each_audio_buf = new int8_t[frag_size]();
+                    if (!(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+                    {
+                        memcpy(each_audio_buf,
+                            (uint8_t*)data + copy_bytes + frag_size * count,
+                            frag_size);
+                    }
+                    std::unique_lock<std::mutex> ul(audio_mutex);
+                    audio_data.push_back(each_audio_buf);
+                    audio_cv.notify_one();
+                    ul.unlock();
+                    remaining_bytes -= frag_size;
+                    count++;
+                }
                 each_audio_buf = new int8_t[frag_size]();
-                readed = (unsigned)bytes - copy_size;
+                readed = remaining_bytes;
                 if (!(flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
-                    memcpy(each_audio_buf, (uint8_t*)data + copy_size, readed);
+                    memcpy(each_audio_buf,
+                        (uint8_t*)data + copy_bytes + frag_size * count,
+                        remaining_bytes);
                 }
             }
             else
             {
-                readed += bytes;
+                if (!(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+                {
+                    memcpy(each_audio_buf + readed, data, copy_bytes);
+                }
+                readed += copy_bytes;
             }
             hr = wasapi_data->m_capture_client->ReleaseBuffer(packet_length);
             if (FAILED(hr))
