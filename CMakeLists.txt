@@ -15,12 +15,19 @@ option(BUILD_WITH_H264 "Enable OpenH264 encoder" ON)
 option(BUILD_RECORDER_WITH_SOUND "Build libopenglrecorder with sound recording support" ON)
 CMAKE_DEPENDENT_OPTION(BUILD_PULSE_WO_DL "If pulseaudio in your distro / system is optional, turn this off to load pulse with libdl"
     ON "BUILD_RECORDER_WITH_SOUND;UNIX" OFF)
+option(STATIC_RUNTIME_LIBS "Build with static runtime libraries" OFF)
 
 if (UNIX OR MINGW)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         add_definitions(-std=gnu++0x -O0)
     else()
         add_definitions(-std=gnu++0x -O3)
+    endif()
+endif()
+
+if (${STATIC_RUNTIME_LIBS})
+    if (UNIX OR MINGW)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++")
     endif()
 endif()
 
