@@ -10,6 +10,10 @@
 
 #include <stddef.h>
 
+#define OGR_VERSION_MAJOR 0
+#define OGR_VERSION_MINOR 1
+#define OGR_VERSION_PATCH 0
+
 /**
  * \mainpage libopenglrecorder
  *
