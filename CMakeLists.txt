@@ -37,21 +37,22 @@ endif()
 
 if (UNIX)
     pkg_check_modules(TURBOJPEG libturbojpeg)
+    set(TURBOJPEG_INCLUDE_DIR ${TURBOJPEG_INCLUDEDIR})
 endif()
 
 if (NOT TURBOJPEG_FOUND)
-    find_path(TURBOJPEG_INCLUDEDIR NAMES turbojpeg.h PATHS "${PROJECT_SOURCE_DIR}/dependencies/include")
+    find_path(TURBOJPEG_INCLUDE_DIR NAMES turbojpeg.h PATHS "${PROJECT_SOURCE_DIR}/dependencies/include")
     find_library(TURBOJPEG_LIBRARIES NAMES libturbojpeg.so.0 libturbojpeg turbojpeg PATHS "${PROJECT_SOURCE_DIR}/dependencies/lib")
 endif()
 
-if (NOT TURBOJPEG_LIBRARIES OR NOT TURBOJPEG_INCLUDEDIR)
+if (NOT TURBOJPEG_LIBRARIES OR NOT TURBOJPEG_INCLUDE_DIR)
     message(FATAL_ERROR "Turbojpeg not found. "
         "Turbojpeg is required to encode video, on ubuntu try install libjpeg-turbo8.")
 endif()
 
-include_directories(${TURBOJPEG_INCLUDEDIR})
-link_directories(${TURBOJPEG_INCLUDEDIR})
-mark_as_advanced(TURBOJPEG_LIBRARIES TURBOJPEG_INCLUDEDIR)
+include_directories(${TURBOJPEG_INCLUDE_DIR})
+link_directories(${TURBOJPEG_INCLUDE_DIR})
+mark_as_advanced(TURBOJPEG_LIBRARIES TURBOJPEG_INCLUDE_DIR)
 
 if (BUILD_RECORDER_WITH_SOUND)
     if (UNIX)
