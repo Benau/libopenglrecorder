@@ -66,40 +66,76 @@ namespace Recorder
         // --------------------------------------------------------------------
         bool load()
         {
-            HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL,
+            HRESULT hr = CoInitialize(NULL);
+            if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to CoInitialize.\n");
+                return false;
+            }
+
+            hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL,
                 CLSCTX_ALL, __uuidof(IMMDeviceEnumerator),
                 (void**)&m_dev_enum);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to CoCreateInstance.\n");
                 return false;
+            }
 
             hr = m_dev_enum->GetDefaultAudioEndpoint(eRender, eConsole,
                 &m_dev);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to m_dev_enum->GetDefaultAudioEndpoint.\n");
                 return false;
+            }
 
             hr = m_dev->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL,
                 (void**)&m_client);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to m_dev->Activate.\n");
                 return false;
+            }
 
             hr = m_client->GetMixFormat(&m_wav_format);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to m_client->GetMixFormat.\n");
                 return false;
+            }
 
             hr = m_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
                 AUDCLNT_STREAMFLAGS_LOOPBACK, REFTIMES_PER_SEC, 0,
                 m_wav_format, NULL);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to m_client->Initialize.\n");
                 return false;
+            }
 
             hr = m_client->GetBufferSize(&m_buffer_size);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to m_client->GetBufferSize.\n");
                 return false;
+            }
 
             hr = m_client->GetService(__uuidof(IAudioCaptureClient),
                 (void**)&m_capture_client);
             if (FAILED(hr))
+            {
+                runCallback(OGR_CBT_ERROR_RECORDING,
+                    "Failed to m_client->GetService.\n");
                 return false;
+            }
 
             m_loaded = true;
             return true;
