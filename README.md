@@ -1,28 +1,30 @@
 # libopenglrecorder
 
-libopenglrecorder is a library allowing optional async readback OpenGL
+`libopenglrecorder` is a library allowing optional async readback OpenGL
 frame buffer with optional audio recording. It will do video and audio
 encoding together. The user of this library has to setup OpenGL context
 himself and load suitable callbacks. All functions exposed by
-libopenglrecorder should be called by the same thread which created the
-OpenGL context. Currently using in Linux and Windows is supported.
+`libopenglrecorder` should be called by the same thread which created the
+OpenGL context. Currently, Linux and Windows are supported.
 
-The sounding recording in Linux is done by PulseAudio and Windows by Wasapi,
+Audio recording is done via PulseAudio on Linux, and via Wasapi on Windows,
 so for Linux make sure that your app is playing sound through PulseAudio, while
-in Windows make sure Wasapi is present which means Windows Vista or later.
-You can optionally link PulseAudio with DL for lazy loading libpulse.
+on Windows make sure Wasapi is present which means Windows Vista or later.
+You can optionally link dynamically against PulseAudio to perform lazy loading of libpulse.
 
-One example usage is to create an advanced bundled-recorder for game out of it.
+One potential use case for `libopenglrecorder` is integrating video recording into a game.
 
 ## License
+
 This software is released under BSD 3-clause license, see [`LICENSE`](/LICENSE).
 
 ## Dependencies
+
   * TurboJPEG (required)
-  * LibVPX (optional for VP8 / VP9 encoding)
-  * OpenH264 (optional for H264 encoding)
-  * Vorbis (optional if build without audio recording)
-  * PulseAudio (optional if build without audio recording in Linux)
+  * LibVPX (optional, for VP8 / VP9 encoding)
+  * OpenH264 (optional, for H264 encoding)
+  * Vorbis (optional if built without audio recording)
+  * PulseAudio (optional if built without audio recording in Linux)
 
 ## Building on Linux
 
@@ -36,8 +38,8 @@ libpulse-dev pkg-config
 
 ### Compiling
 
-Make sure you have a c++11 capable compiler, gcc 4.8 recommended. After
-checking out the repo, `cd libopenglrecorder`, and assume that you have all of
+Make sure you have a C++11 capable compiler, GCC 4.8 or later recommended. After
+checking out the repo, `cd libopenglrecorder`, and ensure that you have all of
 the above dependencies installed:
 
 ```
@@ -50,14 +52,14 @@ sudo make install
 
 ## Windows
 
-Prebulit binaries are avaliable [here](https://github.com/supertuxkart/dependencies).
-Copy the suitable files in windows(_64bit)/dependencies/{dll,lib} for MSVC
-(or mingw if you are using cygwin), you will need
+Prebuilt binaries are avaliable [here](https://github.com/supertuxkart/dependencies).
+Copy the required files in windows(_64bit)/dependencies/{dll,lib} for MSVC
+(or MinGW if you are using Cygwin), you will need
 **openglrecorder.dll**, **libvorbisenc.dll**, **libvorbis.dll**, **libogg.dll**,
-**libvpx.dll** and **libturbojpeg.dll** for runtime, and **openglrecorder.lib**
-for linking. For compiling yourself, just copy the whole dependencies directory
-inside here, and run CMake to configure, make sure that no openglrecorder
-prebuilt binaries or header file are copied.
+**libvpx.dll** and **libturbojpeg.dll** at runtime, and **openglrecorder.lib**
+at link time. To compile it yourself, just copy the whole dependencies directory
+inside here, and run CMake to configure, make sure that no prebuilt `openglrecorder`
+binaries or headers file are copied.
 
 ## Usage of this library
 
