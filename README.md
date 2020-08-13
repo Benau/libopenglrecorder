@@ -24,7 +24,7 @@ This software is released under BSD 3-clause license, see [`LICENSE`](/LICENSE).
   * LibVPX (optional, for VP8 / VP9 encoding)
   * OpenH264 (optional, for H264 encoding)
   * Vorbis (optional if built without audio recording)
-  * PulseAudio (optional if built without audio recording in Linux)
+  * PulseAudio (optional if built without audio recording on Linux)
 
 ## Building on Linux
 
