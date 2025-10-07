@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.4)
+cmake_minimum_required(VERSION 2.8.4...4.1.1)
 
 project(libopenglrecorder)
 include(GNUInstallDirs)
